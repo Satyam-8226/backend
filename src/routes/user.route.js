@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/user.controller.js";
-<<<<<<< HEAD
+import { loginUser, registerUser, logoutUser } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -18,11 +18,11 @@ router.route("/register").post(
     ]),
     registerUser
 );
-=======
 
-const router = Router();
+router.route("/login").post(loginUser);
 
-router.route("/register").post(registerUser);
->>>>>>> b7a5f7ba04ba6267435fa606d32e6fcd47505fd1
+// secured routes for user profile, update, delete etc. can be added here with verifyJWT middleware
+router.route("/logout").post(verifyJWT, logoutUser);
+
 
 export default router;
