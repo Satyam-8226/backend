@@ -154,10 +154,10 @@ const logoutUser = asyncHandler(async (req, res) => {
     // if user found, remove the refresh token from database
     // send success response to frontend
 
-    User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: { refreshToken: undefined }
+            $unset: { refreshToken: 1 }
         },
         {
             new: true
