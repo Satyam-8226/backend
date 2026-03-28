@@ -20,4 +20,15 @@ import userRouter from "./routes/user.route.js";
 // routes declaration
 app.use("/api/v1/users", userRouter);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(statusCode).json({
+        success: false,
+        message,
+        errors: err.errors || [],
+    });
+});
+
 export default app;

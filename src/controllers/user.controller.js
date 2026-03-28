@@ -40,7 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required");
     }
 
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ username } ,{ email }]
     })
 
@@ -108,7 +108,7 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email or username and password are required");
     }
 
-    const user = User.findOne({
+    const user = await User.findOne({
         $or: [{ email }, { username: username?.toLowerCase() }]
     })
 
@@ -190,7 +190,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     try {
-        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_SECRET_KEY);
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.JWT_REFRESH_TOKEN_SECRET);
     
         const user = await User.findById(decodedToken?._id)
     
@@ -227,7 +227,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 })
 
-const changeCurrentUserPassword = asyncHandler(async (req, res) => {
+const changePassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
     const user = await User.findById(req.user?._id)
@@ -238,7 +238,7 @@ const changeCurrentUserPassword = asyncHandler(async (req, res) => {
     }
 
     user.password = newPassword;
-    await user.save(validateBeforeSave = false);
+    await user.save({ validateBeforeSave: false });
 
         return res
         .status(200)
@@ -249,7 +249,7 @@ const changeCurrentUserPassword = asyncHandler(async (req, res) => {
         ));
 });
 
-const getCurrentUserDetails = asyncHandler(async (req, res) => {
+const getCurrentUser = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(new ApiResponse(
@@ -266,7 +266,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Full name and email are required");
     }
 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: { fullName, email }
@@ -284,7 +284,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
-    const avatarLocalPath = req.files?.path;
+    const avatarLocalPath = req.file?.path;
     if(!avatarLocalPath) {
         throw new ApiError(400, "Avatar image is required");
     }
@@ -312,7 +312,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 });
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
-    const coverImageLocalPath = req.files?.path;
+    const coverImageLocalPath = req.file?.path;
     if(!coverImageLocalPath) {
         throw new ApiError(400, "Cover image is required");
     }
@@ -409,7 +409,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
             $match: {
-                _id: mongoose.Types.ObjectId(req.user._id)
+                _id: new mongoose.Types.ObjectId(req.user._id)
             }
         },
         {
@@ -439,7 +439,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                     {
                         $addFields: {
                             owner: {
-                                $first: "$owner"
+                                $first: "$ownerDetails"
                             }
                         }
                     }
@@ -464,8 +464,8 @@ export {
     loginUser,
     logoutUser,
     refreshAccessToken,
-    changeCurrentUserPassword,
-    getCurrentUserDetails,
+    changePassword,
+    getCurrentUser,
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
